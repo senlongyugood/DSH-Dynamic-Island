@@ -45,7 +45,8 @@ try {
   check('the packaged overlay path points at overlay/DynamicIsland.exe',
     /overlay[\\/]DynamicIsland\.exe$/.test(exe), exe);
   const args = defaultOverlayArgs(exe);
-  check('launch arguments keep the island always visible', args.includes('--always-show'), args.join(' '));
+  check('launch arguments keep the island visible while DSH is active', args.includes('--always-show'), args.join(' '));
+  check('launch arguments hide the island after DSH disconnects', args.includes('--hide-on-disconnect'), args.join(' '));
   check('launch arguments write a status file and a log',
     args.includes('--report') && args.includes('--log'), args.join(' '));
 
@@ -72,7 +73,7 @@ try {
   check('a missing overlay executable is reported', missing.started === false && missing.reason === 'missing',
     JSON.stringify(missing));
 
-  // ---- launching uses the always-show argument set -------------------------
+  // ---- launching uses the DSH-connected argument set -----------------------
   const launches = [];
   const launched = await ensureOverlayRunning({
     ports: [],
@@ -82,7 +83,7 @@ try {
       return { pid: 4321, unref() {} };
     }
   });
-  check('a missing island is launched detached so it outlives DSH',
+  check('a missing island is launched as a separate process',
     launched.started === true && launched.pid === 4321, JSON.stringify(launched));
   check('the launch is detached and silent',
     launches.length === 1 && launches[0].options.detached === true && launches[0].options.stdio === 'ignore',
@@ -90,8 +91,10 @@ try {
   check('the launched island runs beside its own executable',
     launches.length === 1 && launches[0].options.cwd === exe.replace(/[\\/][^\\/]+$/, ''),
     launches[0]?.options?.cwd);
-  check('the launch carries the always-show argument set',
+  check('the launch keeps the island visible while DSH is active',
     launches.length === 1 && launches[0].argv.includes('--always-show'), (launches[0]?.argv ?? []).join(' '));
+  check('the launch hides the island after DSH disconnects',
+    launches.length === 1 && launches[0].argv.includes('--hide-on-disconnect'), (launches[0]?.argv ?? []).join(' '));
 } finally {
   overlayServer.server.close();
   otherServer.server.close();

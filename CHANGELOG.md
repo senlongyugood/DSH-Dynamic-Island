@@ -23,6 +23,7 @@
 **常驻与自启**
 
 - `--always-show`：没有任务时只画一块 108×30 的纯黑小胶囊，不再忽隐忽现。
+- DSH 桌面版退出或数据接口持续断开 5 秒后隐藏悬浮窗；重新连接后自动恢复。
 - 打开 DSH 时由宿主半边自动拉起悬浮窗，已在跑则不重复启动（可用 `autoStartOverlay: false` 关闭）。
 - 可选的 Windows 登录自启（`overlay/setup-autostart.ps1`）。
 

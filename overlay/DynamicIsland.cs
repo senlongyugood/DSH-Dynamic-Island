@@ -75,6 +75,8 @@ namespace DshDynamicIsland
         public string SettingsPath;
         /** Keep a resting pill on screen even when there is nothing to report. */
         public bool AlwaysShow;
+        /** Hide the island after its DSH data source stays unavailable. */
+        public bool HideOnDisconnect;
         /** How long the pointer must rest on a task row before its context meter opens. */
         public int HoverDelayMs = 1000;
         public bool Probe;
@@ -95,6 +97,7 @@ namespace DshDynamicIsland
             "  --idle-hide <minutes>   hide a resting island after this long without a running\n" +
             "                          task; 0 (default) keeps it while DSH is around\n" +
             "  --always-show           keep a small resting pill on screen even with no task at all\n" +
+            "  --hide-on-disconnect    hide after the DSH data source is unavailable for 5 seconds\n" +
             "  --hover-delay <ms>      how long the pointer rests on a task before its context meter\n" +
             "                          opens, default 1000\n" +
             "  --settings <path>       settings file (default: island.settings.json next to the exe)\n" +
@@ -111,6 +114,7 @@ namespace DshDynamicIsland
                 {
                     case "--help": case "-h": options.Help = true; break;
                     case "--probe": options.Probe = true; break;
+                    case "--hide-on-disconnect": options.HideOnDisconnect = true; break;
                     case "--url": if (!Next(args, ref index, out options.Url)) return null; break;
                     case "--focus-url": if (!Next(args, ref index, out options.FocusUrl)) return null; break;
                     case "--discovery": if (!Next(args, ref index, out options.DiscoveryPath)) return null; break;
@@ -614,6 +618,8 @@ namespace DshDynamicIsland
         private string _hostUrl;
         private string _focusUrl;
         private DateTime _lastSuccess = DateTime.MinValue;
+        private DateTime? _sourceDisconnectedAt;
+        private readonly DateTime _processStartedAt = DateTime.UtcNow;
         private DateTime _lastDiscoveryRead = DateTime.MinValue;
         private MiniHttpServer _server;
         private string _pushedJson;
@@ -623,6 +629,7 @@ namespace DshDynamicIsland
         private readonly object _focusLock = new object();
         /// <summary>A push older than this is treated as gone, and the host endpoint is tried instead.</summary>
         private static readonly TimeSpan PushTtl = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan DisconnectHideDelay = TimeSpan.FromSeconds(5);
 
         public IslandWindow(Options options)
         {
@@ -1170,7 +1177,13 @@ namespace DshDynamicIsland
             // no host-side plugin activation.
             if (_pushedJson != null && DateTime.UtcNow - _pushedAt <= PushTtl)
             {
-                ApplySnapshot(Parse(_pushedJson), true);
+                var pushed = Parse(_pushedJson);
+                if (pushed.Ok)
+                {
+                    _lastSuccess = _pushedAt;
+                    _sourceDisconnectedAt = null;
+                }
+                ApplySnapshot(pushed, true);
                 return;
             }
 
@@ -1178,6 +1191,12 @@ namespace DshDynamicIsland
             // leaving a stale pill on screen.
             if (_hostUrl == null)
             {
+                if (_options.HideOnDisconnect)
+                {
+                    if (ShouldHideDisconnectedSource()) HideForDisconnectedSource();
+                    else if (_options.AlwaysShow && _model.Count == 0) KeepVisibleOrHide();
+                    return;
+                }
                 ApplySnapshot(new Snapshot { Ok = true }, false);
                 return;
             }
@@ -1210,12 +1229,14 @@ namespace DshDynamicIsland
         {
             if (error != null)
             {
-                // A transient host blip must not blank the island: keep what is on screen and
-                // let the push path or the next poll recover. With --always-show a failure before
-                // anything was ever shown still leaves the resting pill on screen.
+            // A short host blip must not blank the island; --hide-on-disconnect retires the
+            // visible state only after the configured reconnect grace period.
                 _lastError = error;
                 if ((DateTime.UtcNow - _lastSuccess).TotalSeconds > 5) ResolveEndpoint(false);
+                var hiddenForDisconnect = _options.HideOnDisconnect && ShouldHideDisconnectedSource();
+                if (hiddenForDisconnect) HideForDisconnectedSource();
                 if (_options.ReportPath != null) WriteReport(new Snapshot { Ok = false, Error = error });
+                if (hiddenForDisconnect) return;
                 // WPF's IsVisible is not trustworthy here (it can report true while the Win32 window
                 // has no WS_VISIBLE), so the decision uses what the island has to show instead.
                 if (_options.AlwaysShow && _model.Count == 0) KeepVisibleOrHide();
@@ -1223,8 +1244,54 @@ namespace DshDynamicIsland
             }
 
             var snapshot = Parse(text);
-            if (snapshot.Ok) _lastSuccess = DateTime.UtcNow;
+            if (snapshot.Ok)
+            {
+                _lastSuccess = DateTime.UtcNow;
+                _sourceDisconnectedAt = null;
+            }
             ApplySnapshot(snapshot, true);
+        }
+
+        /// <summary>Whether DSH has remained unavailable beyond the reconnect grace period.</summary>
+        private bool ShouldHideDisconnectedSource()
+        {
+            if (!_options.HideOnDisconnect) return false;
+            if (_sourceDisconnectedAt == null)
+            {
+                _sourceDisconnectedAt = _lastSuccess == DateTime.MinValue
+                    ? _processStartedAt
+                    : _lastSuccess;
+            }
+            return DateTime.UtcNow - _sourceDisconnectedAt.Value >= DisconnectHideDelay;
+        }
+
+        /// <summary>Clear stale task details and hide; polling stays active so a reopened DSH can restore the island.</summary>
+        private void HideForDisconnectedSource()
+        {
+            if (_model.Count > 0 || _lastModel != null || Visibility == Visibility.Visible)
+            {
+                Log("DSH data source remained unavailable; hiding the island");
+            }
+            _model = new List<TaskRow>();
+            _lastModel = null;
+            _modelSignature = "";
+            _rows.Children.Clear();
+            _rowPanels.Clear();
+            _requestPanels.Clear();
+            _idle = false;
+            _idleSince = null;
+            _expanded = false;
+            _hoverRow = null;
+            _meterRow = null;
+            _pendingMeterRow = null;
+            _meterTimer.Stop();
+            _collapseTimer.Stop();
+            _empty = true;
+            _header.Visibility = Visibility.Collapsed;
+            _detail.Visibility = Visibility.Collapsed;
+            MeasureSizes();
+            ApplyState(false);
+            SetWindowShown(false);
         }
 
         /// <summary>

@@ -877,6 +877,31 @@ try {
     if ($always -and -not $always.HasExited) { Stop-Process -Id $always.Id -Force -ErrorAction SilentlyContinue }
   }
 
+  # ---- DSH disconnect hides the pill and a fresh push restores it -----------
+  $disconnectSettings = Join-Path $PSScriptRoot 'live-test-disconnect.settings.json'
+  $disconnectReport = Join-Path $PSScriptRoot 'live-test-disconnect.state'
+  Remove-Item -LiteralPath $disconnectSettings, $disconnectReport -Force -ErrorAction SilentlyContinue
+  $disconnectInfo = New-Object System.Diagnostics.ProcessStartInfo
+  $disconnectInfo.FileName = $exe
+  $disconnectInfo.Arguments = "--port $($Port + 7) --url $deadUrl --discovery `"$noDiscovery`" --settings `"$disconnectSettings`" --always-show --hide-on-disconnect --log `"$(Join-Path $PSScriptRoot 'live-test-disconnect.log')`" --report `"$disconnectReport`""
+  $disconnectInfo.UseShellExecute = $false
+  $disconnectInfo.WorkingDirectory = $PSScriptRoot
+  $disconnect = [System.Diagnostics.Process]::Start($disconnectInfo)
+  try {
+    $duringGrace = Wait-For { $g = Get-IslandGeometry $disconnect.Id; if ($g -and $g.Visible) { $g } else { $null } } 4000
+    Assert 'the island remains visible briefly while the source reconnects' ($null -ne $duringGrace)
+    $disconnected = Wait-For { $g = Get-IslandGeometry $disconnect.Id; if ($g -and -not $g.Visible) { $g } else { $null } } 7000
+    Assert 'the island hides after the DSH source stays disconnected' ($null -ne $disconnected)
+    if ($disconnected) {
+      Send-Snapshot $empty ($Port + 7)
+      $restored = Wait-For { $g = Get-IslandGeometry $disconnect.Id; if ($g -and $g.Visible) { $g } else { $null } } 4000
+      Assert 'a fresh DSH page push restores the hidden island' ($null -ne $restored)
+    }
+  }
+  finally {
+    if ($disconnect -and -not $disconnect.HasExited) { Stop-Process -Id $disconnect.Id -Force -ErrorAction SilentlyContinue }
+  }
+
   # ---- the --scale flag scales the pill without touching the mouse ----------
   $scaledInfo = New-Object System.Diagnostics.ProcessStartInfo
   $scaledInfo.FileName = $exe
@@ -907,7 +932,8 @@ try {
     }
     if ($scaledState -and $baseCollapsed) {
       $ratio = $scaledState.pillWidth / $baseCollapsed.pillWidth
-      Assert 'the --scale flag scales the pill' ([math]::Abs($ratio - 1.25) -lt 0.06) "ratio=$([math]::Round($ratio, 3)) (base=$($baseCollapsed.pillWidth) scaled=$($scaledState.pillWidth))"
+      $expectedRatio = [double]$scaledState.scale / [double]$baseCollapsed.scale
+      Assert 'the --scale flag scales the pill' ([math]::Abs($ratio - $expectedRatio) -lt 0.06) "ratio=$([math]::Round($ratio, 3)) expected=$([math]::Round($expectedRatio, 3)) (base=$($baseCollapsed.pillWidth) scaled=$($scaledState.pillWidth))"
     } else {
       Assert 'the --scale flag scales the pill' ($false) 'a scaled or base window never applied the payload'
     }

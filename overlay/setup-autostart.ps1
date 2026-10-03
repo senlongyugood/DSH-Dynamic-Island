@@ -12,7 +12,7 @@
 
 .PARAMETER Arguments
   Extra arguments for the shortcut; defaults to the same set start-island.cmd uses
-  (`--always-show --report <overlay>\island.state.txt --log <overlay>\island.log`).
+  (`--always-show --hide-on-disconnect --report <overlay>\island.state.txt --log <overlay>\island.log`).
 
 .EXAMPLE
   powershell -NoProfile -ExecutionPolicy Bypass -File .\setup-autostart.ps1
@@ -42,7 +42,7 @@ if ($Remove) {
 
 if (-not (Test-Path -LiteralPath $exe)) { throw "missing $exe — run build.ps1 first" }
 if (-not $Arguments) {
-  $Arguments = "--always-show --report `"$(Join-Path $overlayDir 'island.state.txt')`" --log `"$(Join-Path $overlayDir 'island.log')`""
+  $Arguments = "--always-show --hide-on-disconnect --report `"$(Join-Path $overlayDir 'island.state.txt')`" --log `"$(Join-Path $overlayDir 'island.log')`""
 }
 
 $shell = New-Object -ComObject WScript.Shell

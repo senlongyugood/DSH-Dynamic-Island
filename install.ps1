@@ -110,7 +110,7 @@ elseif (-not $NoStart) {
     & $startScript | Out-Null
     Write-Host '  desktop island: started (top center, always on)'
   } else {
-    Start-Process -FilePath $exe -ArgumentList @('--always-show') -WorkingDirectory $overlayDir | Out-Null
+    Start-Process -FilePath $exe -ArgumentList @('--always-show', '--hide-on-disconnect') -WorkingDirectory $overlayDir | Out-Null
     Write-Host '  desktop island: started'
   }
 }
