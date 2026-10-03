@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="380" viewBox="0 0 760 380" role="img" aria-label="灵动岛：收起胶囊与展开卡片示意">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1b1d21"/>
+      <stop offset="1" stop-color="#26282d"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="220%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+    <style>
+      .t { font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif; }
+      .label { fill: #8b8f98; font-size: 11px; letter-spacing: .4px; }
+      .pillText { fill: #f2f3f5; font-size: 12.5px; font-weight: 500; }
+      .sub { fill: rgba(242,243,245,.55); font-size: 11px; }
+      .title { fill: #f2f3f5; font-size: 12.5px; font-weight: 500; }
+      .badge { fill: #ffb340; font-size: 10px; font-weight: 600; }
+      .card { fill: rgba(12,12,14,.94); stroke: rgba(255,255,255,.10); }
+      .divider { stroke: rgba(255,255,255,.09); }
+      .dotRun { fill: #4d8bff; }
+      .dotWarn { fill: #ff9f0a; }
+      .dotDone { fill: #32d74b; }
+    </style>
+  </defs>
+
+  <rect width="760" height="380" fill="url(#bg)"/>
+  <text class="t label" x="24" y="30">① 收起：顶部居中的胶囊（有任务时才出现）</text>
+
+  <!-- collapsed pill -->
+  <g filter="url(#glow)">
+    <rect x="268" y="48" width="224" height="34" rx="17" fill="rgba(12,12,14,0.94)" stroke="rgba(255,255,255,.08)"/>
+  </g>
+  <circle class="dotWarn" cx="288" cy="65" r="4"/>
+  <circle cx="288" cy="65" r="8" fill="none" stroke="#ff9f0a" stroke-opacity=".45" stroke-width="2"/>
+  <text class="t pillText" x="302" y="69">识别不到 codex 任务…</text>
+  <rect x="424" y="56" width="44" height="18" rx="9" fill="rgba(255,159,10,.18)"/>
+  <text class="t badge" x="433" y="69">待批准</text>
+  <path d="M478 61.5 482 65.5 486 61.5" stroke="rgba(242,243,245,.45)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+
+  <text class="t label" x="24" y="118">② 鼠标移入：展开为详情卡片（移出后自动收起）</text>
+
+  <!-- expanded card -->
+  <g filter="url(#glow)">
+    <rect class="card" x="188" y="136" width="384" height="222" rx="20"/>
+  </g>
+  <!-- header row -->
+  <circle class="dotWarn" cx="212" cy="163" r="4"/>
+  <circle cx="212" cy="163" r="8" fill="none" stroke="#ff9f0a" stroke-opacity=".45" stroke-width="2"/>
+  <text class="t pillText" x="228" y="167">识别不到 codex 当前的任务了</text>
+  <rect x="466" y="154" width="44" height="18" rx="9" fill="rgba(255,159,10,.18)"/>
+  <text class="t badge" x="475" y="167">待批准</text>
+  <line class="divider" x1="200" y1="184" x2="560" y2="184"/>
+
+  <text class="t label" x="204" y="203">任务 3</text>
+
+  <!-- rows -->
+  <circle class="dotWarn" cx="214" cy="224" r="3.5"/>
+  <text class="t title" x="230" y="224">识别不到 codex 当前的任务了</text>
+  <text class="t sub" x="230" y="239">等待批准 · 42 秒前更新</text>
+
+  <circle class="dotRun" cx="214" cy="262" r="3.5"/>
+  <text class="t title" x="230" y="262">other</text>
+  <text class="t sub" x="230" y="277">正在执行 · 1 个子任务 · 5 秒前更新</text>
+
+  <!-- context usage -->
+  <rect x="204" y="290" width="352" height="92" rx="12" fill="rgba(255,255,255,.07)"/>
+  <text class="t label" x="214" y="308">上下文用量</text>
+  <text class="t title" x="536" y="308" text-anchor="end">57%</text>
+  <rect x="214" y="318" width="332" height="4" rx="2" fill="rgba(255,255,255,.12)"/>
+  <rect x="214" y="318" width="8" height="4" rx="1" fill="#8E9AAF"/>
+  <rect x="223" y="318" width="12" height="4" rx="1" fill="#A78BFA"/>
+  <rect x="236" y="318" width="153" height="4" rx="1" fill="#4D8BFF"/>
+  <text class="t sub" x="214" y="340" fill="rgba(242,243,245,.72)">~557K / 1M · 剩余 443K</text>
+  <circle cx="217" cy="354" r="3" fill="#8E9AAF"/><text class="t sub" x="225" y="357">系统 1.5K</text>
+  <circle cx="285" cy="354" r="3" fill="#A78BFA"/><text class="t sub" x="293" y="357">工具 8K</text>
+  <circle cx="348" cy="354" r="3" fill="#4D8BFF"/><text class="t sub" x="356" y="357">消息 495K</text>
+  <text class="t label" x="214" y="398" fill="#5c6068">点击任务可打开对应会话 · Ctrl+滚轮调整大小 · Esc 收起</text>
+  <text class="t label" x="536" y="398" text-anchor="end" fill="#7b8088">缩放 100%</text>
+</svg>

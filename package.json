@@ -1,0 +1,46 @@
+{
+  "name": "dsh-plugin-dynamic-island",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Apple Dynamic Island style desktop floating task monitor for DSH: a top-center pill that shows every running task, each task's context usage and pending approvals, and expands into a detail card on hover.",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "cordis",
+    "plugin",
+    "dynamic-island",
+    "overlay",
+    "windows",
+    "wpf",
+    "task-monitor"
+  ],
+  "homepage": "https://github.com/<your-name>/dsh-plugin-dynamic-island#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/<your-name>/dsh-plugin-dynamic-island.git"
+  },
+  "bugs": {
+    "url": "https://github.com/<your-name>/dsh-plugin-dynamic-island/issues"
+  },
+  "author": "",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib"
+  ],
+  "license": "MIT",
+  "dsh": {
+    "client": {
+      "platform": "web"
+    }
+  }
+}

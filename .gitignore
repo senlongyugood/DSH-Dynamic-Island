@@ -1,0 +1,46 @@
+# ---- build output -----------------------------------------------------------
+# Release zips are attached to GitHub Releases, not committed.
+dist/
+
+# ---- the compiled overlay ---------------------------------------------------
+# Kept out of the working tree; `overlay/build.ps1` rebuilds it, and the release
+# archive ships a prebuilt copy for people who only want to run it. The GUID-prefixed
+# copies are what the build writes when a running instance has the exe locked.
+overlay/DynamicIsland.exe
+overlay/*_DynamicIsland.exe
+overlay/*.pdb
+overlay/obj/
+overlay/bin/
+
+# ---- runtime artefacts ------------------------------------------------------
+# State snapshots, logs, personal settings and debug captures written while it runs.
+overlay/island.state.txt
+overlay/island.log
+overlay/island.settings.json
+overlay/*.state
+overlay/*.state.txt
+overlay/*.log
+overlay/*.settings.json
+overlay/*.json
+overlay/*.png
+overlay/live-test-*
+
+# ---- plugin runtime state ---------------------------------------------------
+# The host half announces its endpoint here at runtime; never commit it.
+lib/*.state.json
+dynamic-island.state.json
+dynamic-island.approval.json
+dev/dynamic-island.state.json
+
+# ---- research notes ---------------------------------------------------------
+# Extracted notes about the official client packages. Read them locally, but do not
+# redistribute vendor files: keep this out of the public repository.
+dev/ref/
+
+# ---- editors / node ---------------------------------------------------------
+.vscode/
+.idea/
+node_modules/
+*.swp
+Thumbs.db
+desktop.ini
